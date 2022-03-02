@@ -1,0 +1,24 @@
+# IP range to proxy
+proxy:
+- 10.0.0.0/8
+
+# string to pass to NO_PROXY/no_proxy
+no_proxy: .internal,googleapis.com
+
+# Names match kubectl context
+# name supports basic regex, first matching top down, not matching is an error - https://docs.rs/regex
+# most patterns will need to be quoted
+# no address means don't proxy
+contexts:
+- name: hq1
+- name: hq2
+  address: 127.0.0.1:12341
+- name: au-prod
+  address: 127.0.0.1:12342
+- name: us-staging
+  address: 127.0.0.1:12343
+- name: 'external-\D{2}-(staging|prod)'
+  address: 8.8.8.8:11111
+# Not actually needed, default is no proxy
+- name: '.*'
+  address: 127.0.0.1:55555

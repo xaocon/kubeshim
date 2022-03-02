@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+if [ -z ${RUST_LOG} ]; then
+    set -e
+else
+    set -ex
+fi
+
+program="${0##*/}" # get bare bin name
+
+# break up PATH by colons
+oIFS="$IFS"
+IFS=":"
+declare -a fields=($PATH)
+IFS="$oIFS"
+unset oIFS
+
+# strip out components with KUBESHIM_ROOT in them to prevent recursion
+CLEAN_PATH=
+for component in "${fields[@]}" ;do
+    if [ ! -z "${component##*$KUBESHIM_ROOT*}" ]; then
+        CLEAN_PATH="$CLEAN_PATH:$component"
+    fi
+done
+
+exec env PATH=$CLEAN_PATH kubeshim run -- "$program" "$@"

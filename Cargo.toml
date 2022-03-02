@@ -1,0 +1,38 @@
+[package]
+name = "kubeshim"
+version = "0.10.2"
+authors = ["Evan Pitstick <emp@seclab.in>"]
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0.136", features = ["derive"] }
+hyper = { version = "0.14.17", features = ["full"] }
+dirs = "4.0.0"
+log = "0.4.14"
+tokio-socks = "0.5.1"
+iprange = "0.6.7"
+ipnet = "2.3.1"
+serde_yaml = "0.8.23"
+regex = "1.5.4"
+stable-eyre = "0.2.2"
+simple_logger = "2.1.0"
+path-absolutize = "3.0.11"
+
+[dependencies.tokio]
+version = "1.17.0"
+features = ["rt-multi-thread", "net", "process", "macros", "io-util", "signal"]
+
+[dependencies.clap]
+version = "3.1.3"
+default-features = true
+features = ["std", "cargo", "derive"]
+
+[profile.dev]
+split-debuginfo = "unpacked"
+# Seems broken right now
+incremental = false
+
+# https://doc.rust-lang.org/rustc/profile-guided-optimization.html
+[profile.release]
+lto = true
+codegen-units = 1

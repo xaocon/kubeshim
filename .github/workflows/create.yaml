@@ -1,0 +1,60 @@
+name: Rust Build
+
+on:
+  workflow_run:
+    workflows: ["Rust Checks"]
+    types:
+      - completed
+    branches:
+      - "main"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build Linux/amd64
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    strategy:
+      max-parallel: 4
+      matrix:
+        # It should be possible widdle this down more in the future
+        include:
+        - os: ubuntu-latest
+          friendly_name: linux
+        - os: macos-11
+          friendly_name: darwin
+    runs-on:  ${{ matrix.os }}
+    steps:
+    -
+      name: Checkout sources
+      uses: actions/checkout@v2
+    -
+      name: Install stable toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    -
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    -
+      name: Build target
+      uses: actions-rs/cargo@v1
+      with:
+        command: build
+        args: --release --all-features
+    -
+      uses: actions/upload-artifact@v2
+      name: Upload
+      with:
+        name: kubeshim-${{ matrix.friendly_name }}-amd64
+        path: target/release/kubeshim

@@ -1,0 +1,53 @@
+image: "rust:latest"
+
+.caching_rust: &caching_rust
+  cache:
+    key: DR_CACHE_KEY
+    paths:
+      - .cargo/
+      - .rustup/
+      - target/
+  before_script:
+    - export CARGO_HOME="${PWD}/.cargo"
+    - export RUSTUP_HOME="${PWD}/.rustup"
+    - export PATH="${CARGO_HOME}/bin:${PATH}"
+
+stages:
+  - prep
+  - test
+  - build
+
+cargo_prep:
+  stage: prep
+  <<: *caching_rust
+  script:
+    - mkdir -p .cargo/bin
+    - echo ${CARGO_HOME}
+    - echo ${RUSTUP_HOME}
+    - rustup toolchain install --no-self-update --profile minimal stable
+    - rustup toolchain install --no-self-update nightly
+    - rustup +stable target add x86_64-unknown-linux-musl
+    - rustup target add x86_64-unknown-linux-musl
+    - rustup --version
+    - cargo --version
+
+cargo_test:
+  stage: test
+  <<: *caching_rust
+  script:
+    - cargo +stable check --lib --bins --tests
+    - cargo +nightly check
+    - cargo +nightly fmt -- --check || true
+    - cargo +nightly clippy
+    - cargo +stable test
+
+cargo_build:
+  stage: build
+  <<: *caching_rust
+  script:
+    - cargo +stable build --release --target=x86_64-unknown-linux-musl
+    - strip target/x86_64-unknown-linux-musl/release/${CI_PROJECT_NAME}
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - target/x86_64-unknown-linux-musl/release/${CI_PROJECT_NAME}
