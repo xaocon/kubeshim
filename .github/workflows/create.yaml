@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -67,8 +68,11 @@ jobs:
         name: Get Artifacts
         uses: actions/download-artifact@v2
       -
+        name: Debug where artifacts are
+        run: find .
+      -
         name: Publish
         uses: softprops/action-gh-release@v1
         with:
-          files: "*"
+          files: kubeshim-*
           body: Release of ${{ github.ref_name }}.
