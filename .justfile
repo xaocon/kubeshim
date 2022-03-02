@@ -24,6 +24,7 @@ clean:
 	cargo clean
 
 test:
+	markdownlint -f *.md
 	cargo check
 	cargo test
 	cargo fmt

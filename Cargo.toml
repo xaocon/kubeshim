@@ -1,6 +1,6 @@
 [package]
 name = "kubeshim"
-version = "0.10.2"
+version = "0.10.3"
 authors = ["Evan Pitstick <emp@seclab.in>"]
 edition = "2021"
 
@@ -23,7 +23,7 @@ version = "1.17.0"
 features = ["rt-multi-thread", "net", "process", "macros", "io-util", "signal"]
 
 [dependencies.clap]
-version = "3.1.3"
+version = "3.1.5"
 default-features = true
 features = ["std", "cargo", "derive"]
 

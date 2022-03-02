@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-if [ -z ${RUST_LOG} ]; then
-    set -e
+if [ -z ${KUBESHIM_DEBUG} ]; then
+    set -euo pipefail
+    VERBOSITY=""
 else
-    set -ex
+    set -euxo pipefail
+    VERBOSITY="-vvvv"
 fi
 
 program="${0##*/}" # get bare bin name
@@ -22,4 +24,4 @@ for component in "${fields[@]}" ;do
     fi
 done
 
-exec env PATH=$CLEAN_PATH kubeshim run -- "$program" "$@"
+exec env PATH=$CLEAN_PATH kubeshim ${VERBOSITY} run -- "$program" "$@"

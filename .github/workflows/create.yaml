@@ -1,12 +1,9 @@
 name: Rust Build
 
 on:
-  workflow_run:
-    workflows: ["Rust Checks"]
-    types:
-      - completed
-    branches:
-      - "main"
+  push:
+    tags:
+      - "v*"
 
 env:
   CARGO_TERM_COLOR: always
@@ -51,10 +48,28 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --release --all-features
+        args: --release --locked
+    -
+      name: Strip
+      run: |
+        strip target/release/kubeshim
     -
       uses: actions/upload-artifact@v2
       name: Upload
       with:
         name: kubeshim-${{ matrix.friendly_name }}-amd64
         path: target/release/kubeshim
+  release:
+    name: Create release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Get Artifacts
+        uses: actions/download-artifact@v2
+      -
+        name: Publish
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "*"
+          body: Release of ${{ github.ref_name }}.
