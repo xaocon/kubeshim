@@ -1,12 +1,12 @@
 name: Rust Checks
 
 on:
-  # push:
-  #   branches:
-  #   - main
-  # pull_request:
-  #   branches:
-  #   - main
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
   # should add vars that can trigger release
   workflow_dispatch:
 

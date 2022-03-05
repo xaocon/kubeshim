@@ -71,10 +71,14 @@ jobs:
       uses: actions/download-artifact@v2
     -
       name: Debug where artifacts are
-      run: find .
-    # -
-    #   name: Publish
-    #   uses: softprops/action-gh-release@v1
-    #   with:
-    #     files: kubeshim-*
-    #     body: Release of ${{ github.ref_name }}.
+      run: |
+        mkdir release
+        for i in kubeshim-*; do
+          mv $i/kubeshim release/$i
+        done
+    -
+      name: Publish
+      uses: softprops/action-gh-release@v1
+      with:
+        files: release/*
+        body: Release of ${{ github.ref_name }}.
