@@ -1,4 +1,5 @@
 set dotenv-load := true
+crate_version := `cargo pkgid | rg '#(.*)' -or '$1'`
 
 list:
 	@just --list
@@ -29,3 +30,7 @@ test:
 	cargo test
 	cargo fmt
 	cargo clippy
+
+release:
+	git tag {{ crate_version }}
+	git push --tags

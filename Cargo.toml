@@ -1,29 +1,29 @@
 [package]
 name = "kubeshim"
-version = "0.10.3"
+version = "0.10.4"
 authors = ["Evan Pitstick <emp@seclab.in>"]
 edition = "2021"
 
 [dependencies]
-serde = { version = "1.0.136", features = ["derive"] }
-hyper = { version = "0.14.17", features = ["full"] }
+serde = { version = "1.0.137", features = ["derive"] }
+hyper = { version = "0.14.18", features = ["full"] }
 dirs = "4.0.0"
-log = "0.4.14"
+log = "0.4.17"
 tokio-socks = "0.5.1"
 iprange = "0.6.7"
-ipnet = "2.3.1"
-serde_yaml = "0.8.23"
-regex = "1.5.4"
+ipnet = "2.5.0"
+serde_yaml = "0.8.24"
+regex = "1.5.6"
 stable-eyre = "0.2.2"
 simple_logger = "2.1.0"
-path-absolutize = "3.0.11"
+path-absolutize = "3.0.13"
 
 [dependencies.tokio]
-version = "1.17.0"
+version = "1.18.2"
 features = ["rt-multi-thread", "net", "process", "macros", "io-util", "signal"]
 
 [dependencies.clap]
-version = "3.1.5"
+version = "3.1.18"
 default-features = true
 features = ["std", "cargo", "derive"]
 
