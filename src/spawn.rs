@@ -10,6 +10,29 @@ use tokio::sync::oneshot::{channel, Receiver};
 
 use crate::proxy;
 
+// /// Let `Path` and `PathBuf` have `absolutize` and `absolutize_virtually` method.
+// pub trait Absolutize {
+//     /// Get an absolute path. This works even if the path does not exist.
+//     fn absolutize(&self) -> io::Result<Cow<Path>>;
+// }
+
+// impl Absolutize for Path {
+//     fn absolutize(&self) -> io::Result<Cow<Path>> {
+//         let cwd = get_cwd!();
+
+//         self.absolutize_from(&cwd)
+//     }
+
+//     fn absolutize_from(&self, cwd: &Path) -> io::Result<Cow<'_, Path>> {
+//         unimplemented!();
+// 	}
+// }
+// impl Absolutize for PathBuf {
+//     #[inline]
+//     fn absolutize(&self) -> io::Result<Cow<Path>> {
+//         self.as_path().absolutize()
+//     }
+// }
 // TODO: could make zombies, need to cleanup if command doesn't finish before this run
 // https://docs.rs/tokio/1.5.0/tokio/process/struct.Command.html#method.kill_on_drop
 

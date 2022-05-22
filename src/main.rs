@@ -1,11 +1,9 @@
+use std::env;
 use std::path::PathBuf;
+use std::fmt;
 
-#[allow(unused_imports)]
-use clap::{CommandFactory, Parser, Subcommand};
-use dirs::home_dir;
 use kubeshim::spawn;
-use log::{debug, LevelFilter};
-use simple_logger::SimpleLogger;
+use log::{debug, trace};
 use stable_eyre::eyre::{bail, Result};
 
 #[tokio::main]
@@ -19,85 +17,76 @@ async fn main() {
 	});
 }
 
-#[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
-struct Cli {
-	#[clap(short, long, parse(from_occurrences))]
-	verbose: usize,
-
-	#[clap(short, long)]
-	config: Option<String>,
-
-	#[clap(subcommand)]
-	subcommand: Commands,
+fn get_called_as() -> String {
+	let mut args: Vec<String> = env::args().collect();
+	trace!("args: {args:?}");
+	let called_as = PathBuf::from(args.remove(0));
+	let c = called_as.clone();
+	let name = c.file_name().unwrap().to_string_lossy(); // If this doesn't work we should panic
+	debug!("called as {name}");
+	name
 }
 
-#[derive(Subcommand, Debug)]
-enum Commands {
-	/// Run the command
-	#[clap(visible_alias = "r")]
-	Run {
-		#[clap(required = true, multiple_values = true, last = true)]
-		commands: Vec<String>,
-	},
+#[derive(Debug)]
+struct RunErrorr {
+	msg: String,
+}
+
+impl fmt::Display for RunErrorr {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{HELP}\n{self.msg}")
+    }
 }
 
 // Should probably be in main but less to import this way and for the time being no one is using as a lib
 pub async fn run() -> Result<i32> {
 	stable_eyre::install()?;
-	let cli = Cli::parse();
+	env_logger::Builder::from_env("KS_DEBUG").init();
 
-	let level = match cli.verbose {
-		0 => LevelFilter::Error,
-		1 => LevelFilter::Warn,
-		2 => LevelFilter::Info,
-		3 => LevelFilter::Debug,
-		_ => LevelFilter::Trace,
-	};
+	let base_dir = env::var("KS_DIR");
 
-	SimpleLogger::new()
-		.with_colors(true)
-		.with_level(level)
-		.init()
-		.unwrap();
+	// first test how it's called
+	let called_as = get_called_as();
+
+	if called_as == "kubeshim" || called_as == "ks" {
+		return Err(RunErrorr{msg: "called as bin"});
+	}
+
+	let base_dir = PathBuf::from(base_dir.unwrap());
 
 	// Set and check for config file
 	// Maybe make Enum so I know if it was specified or build config here instead of passing path
-	let config_file = match cli.config {
-		Some(c) => PathBuf::from(c),
-		None => {
-			let mut config_file = home_dir().unwrap();
-			config_file.push(".config/kubeshim.yaml");
-
-			config_file
-		},
-	};
+	let mut config_file = base_dir.clone();
+	config_file.push("kubeshim.yaml");
 	debug!("Using config file: {:?}", &config_file);
 
 	// TODO: should probably check it's readable here
-	if !&config_file.is_file() {
-		bail!("Config file {} is missing", &config_file.to_str().unwrap())
+	if ! &config_file.is_file() {
+		return Err(RunErrorr{msg: "no config file"});
 	}
 
-	let res = match cli.subcommand {
-		Commands::Run { commands } => spawn::run_and_proxy(commands, config_file).await?,
-	};
+	args.insert(0, name.to_string());
 
-	// TODO: this is the start of getting rid of exec_script
-	// let cli_command = Cli::command().get_name().to_string();
-	// if (cli.subcommand.is_none() && ( cli_command == "kubeshim" || cli_command == "ks")) ||
-	// 	(cli.subcommand.is_some() && ( cli_command != "kubeshim" && cli_command != "ks")) {
-	// 		Cli::command().error(clap::ErrorKind::DisplayHelp, "Call directly with run or set up as symlink or alias").exit();
-	// }
-
-	// if let Some(Commands::Run { commands }) = cli.subcommand {
-	// 	res = spawn::run_and_proxy(commands, config_file, false).await?
-	// } else {
-	// 	res = spawn::run_and_proxy(commands, config_file, true).await?
-	// }
-
-	Ok(res)
+	spawn::run_and_proxy(args, config_file).await
 }
+
+fn print_help(extra: &str) -> Result<()> {
+	println!("{HELP}");
+	bail!("{}", extra);
+}
+
+// TODO: add more here
+const HELP: &str = r#"
+Set up a directory to hold this bin and symlinks to it with the names of commands you want to call it as.
+Set env variable KS_DIS to the directory and make sure it's early in your PATH.
+Example:
+echo 'export KS_DIR="$HOME/.ks"' | tee -a $HOME/.zshenv | source /dev/stdin
+echo 'export PATH="$KS_DIR:$PATH"' | tee -a $HOME/.zshrc | source /dev/stdin
+mkdir $KS_DIR
+cp kubeshim $KS_DIR/
+ln -s kubeshim $KS_DIR/kubectl
+hash -r
+"#;
 
 #[cfg(test)]
 mod tests {
